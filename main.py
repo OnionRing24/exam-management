@@ -16,7 +16,8 @@ def create_get_request():
 @app.route('/register', methods=['POST'])
 def create_account():
     if request.form.get('password') == request.form.get('confirm_password'):
-        if request.form.get('username')
+        if request.form.get('username'):
+            pass
 
 if __name__ == '__main__':
     app.run(debug=True)
