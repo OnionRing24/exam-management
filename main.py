@@ -9,5 +9,14 @@ db = SQLAlchemy(app)
 def index():
     return render_template('index.html')
 
+@app.route('/register', methods=['GET'])
+def create_get_request():
+    return render_template('register.html')
+
+@app.route('/register', methods=['POST'])
+def create_account():
+    if request.form.get('password') == request.form.get('confirm_password'):
+        if request.form.get('username')
+
 if __name__ == '__main__':
     app.run(debug=True)
