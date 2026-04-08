@@ -7,9 +7,23 @@ db = SQLAlchemy(app)
 
 
 class Accounts(db.Model):
+    __name__ = 'accounts'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
     role = db.Column(db.String(50), nullable=False)
+
+class Tests(db.Model):
+    __name__ = 'tests'
+    test_id = db.Column(db.Integer, primary_key=True)
+    creator_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
+    title = db.Column(db.Text, nullable=False)
+
+class Questions(db.Model):
+    __name__ = 'questions'
+    question_id = db.Column(db.Integer, primary_key=True)
+    test_id = db.Column(db.Integer, db.ForeignKey('tests.id'), nullable=False)
+    question_text = db.Column(db.Text, nullable=False)
+    sort_oder = db.Column(db.Integer, nullable=False, default=0)
 
 @app.before_request
 def create_tables():
