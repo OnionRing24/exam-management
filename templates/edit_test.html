@@ -1,23 +1,48 @@
 {% extends "base.html" %}
 {% block body %}
     <div class="body">
+        {% if error %}
+            <h2>{{ error }}</h2>
+        {% endif %}
+
+        {% if success %}
+            <h2>{{ success }}</h2>
+        {% endif %}
+
+
+
         <h1>Edit Test</h1>
 
-        <form action="/edit_test/{{ test['test_id'] }}" method="POST">
-            <input type="text" name="test_id" value="{{ test['test_id'] }}" class="input_field" readonly>
-            <input type="text" name="title" value="{{ test['title'] }}" class="input_field" required>
-            <div id="input-container"></div>
+        <form action="/edit_test/{{ test.test_id }}" method="POST">
+            <input type="text" name="test_id" value="{{ test.test_id }}" class="input_field" readonly>
+            <input type="text" name="title" value="{{ test.title }}" class="input_field" required>
+            
+            <h3>Questions:</h3>
+            <div id="input-container">
+                {% if questions %}
+                    {% for question in questions %}
+                        <div class="input-group">
+                            <input type="text" name="existing_question_text" value="{{ question.question_text }}" class="input_field">
+                            <!-- Optional: Add edit/delete buttons here -->
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No questions yet.</p>
+                {% endif %}
+            </div>
+            
             <button type="button" onclick="addField()">Add Question</button>
-            <button type="submit">Register</button>
+            <button type="submit">Save</button>
         </form>
     </div>
+
     <script>
         function addField() {
             const container = document.getElementById('input-container');
             const div = document.createElement('div');
             div.className = 'input-group'
             div.innerHTML = `
-                <input type='text' name='question_text' placeholder='Question'>
+                <input type='text' name='question_text' placeholder='Question' class='input_field'>
                 <button type='button' onclick='this.parentElement.remove()'>Remove</button>
             `;
             container.appendChild(div);

@@ -7,22 +7,22 @@ db = SQLAlchemy(app)
 
 
 class Accounts(db.Model):
-    __name__ = 'accounts'
+    __tablename__ = 'accounts'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
     # PW
     role = db.Column(db.String(50), nullable=False)
 
 class Tests(db.Model):
-    __name__ = 'tests'
+    __tablename__ = 'tests'
     test_id = db.Column(db.Integer, primary_key=True)
     creator_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
     title = db.Column(db.Text, nullable=False)
 
 class Questions(db.Model):
-    __name__ = 'questions'
+    __tablename__ = 'questions'
     question_id = db.Column(db.Integer, primary_key=True)
-    test_id = db.Column(db.Integer, db.ForeignKey('tests.id'), nullable=False)
+    test_id = db.Column(db.Integer, db.ForeignKey('tests.test_id'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
 
 
@@ -58,6 +58,7 @@ def login():
         username = request.form.get('username')
         user_exists = Accounts.query.filter_by(username=username).first()
         if user_exists:
+            print(user_exists)
             return redirect('/')
         else:
             db.session.rollback()
@@ -109,17 +110,53 @@ def create_test():
 
 
 @app.route('/edit_test/<int:test_id>', methods=['GET'])
-def update_get_requrest(test_id):
+def update_get_request(test_id):
     try:
-        test = Tests.query.get(test_id)
-    
+        test = Tests.query.filter_by(test_id=test_id).first()
+
         if test is None:
-            return render_template('edit_test.html', error='Test not found!', test=None)
-        return render_template('edit_test.html', test=test)
-    
+            return render_template('edit_test.html', error='test not found', test=None, questions=[])
+        
+        # Fetch ALL questions for this test
+        questions = Questions.query.filter_by(test_id=test_id).all()
+
+        return render_template('edit_test.html', test=test, questions=questions, error=None)
+    except Exception as e:
+        print(e)
+        return render_template('edit_test.html', error=str(e), test=None, questions=[])
+
+
+
+@app.route('/edit_test/<int:test_id>', methods=['POST'])
+def update_test(test_id):
+    try:
+        test = Tests.query.filter_by(test_id=test_id).first()
+        
+        if test is None:
+            return render_template('edit_test.html', error='test not found', test=None)
+        
+        # Update test title
+        test.title = request.form['title']
+        db.session.commit()
+        
+        # Handle new questions
+        question_texts = request.form.getlist('question_text')
+        for question_text in question_texts:
+            if question_text.strip():  # Only add non-empty questions
+                new_question = Questions(test_id=test_id, question_text=question_text)
+                db.session.add(new_question)
+        
+        db.session.commit()
+        
+        # Fetch updated data to re-render
+        questions = Questions.query.filter_by(test_id=test_id).all()
+        return render_template('edit_test.html', error=None, success="Data updated successfully!", test=test, questions=questions)
     except Exception as e:
         db.session.rollback()
-        return f"Error: {e}"
+        print(e)
+        return render_template('edit_test.html', error=str(e), success=None, test=test, questions=[])
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
