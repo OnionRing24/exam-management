@@ -10,6 +10,7 @@ class Accounts(db.Model):
     __name__ = 'accounts'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
+    # PW
     role = db.Column(db.String(50), nullable=False)
 
 class Tests(db.Model):
@@ -23,7 +24,7 @@ class Questions(db.Model):
     question_id = db.Column(db.Integer, primary_key=True)
     test_id = db.Column(db.Integer, db.ForeignKey('tests.id'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
-    sort_oder = db.Column(db.Integer, nullable=False, default=0)
+
 
 @app.before_request
 def create_tables():
@@ -44,11 +45,24 @@ def register():
         try:
             db.session.add(new_row)
             db.session.commit()
-            return redirect('/')
+            return redirect(url_for('login'))
         except Exception as e:
             db.session.rollback()
             return f"Error: {e}"
     return render_template('register.html')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        user_exists = Accounts.query.filter_by(username=username).first()
+        if user_exists:
+            return redirect('/')
+        else:
+            db.session.rollback()
+            return f"Error: {Exception}"
+    return render_template('login.html')
 
 
 @app.route('/accounts/')
@@ -63,6 +77,49 @@ def get_accounts(page=1):
     print(accounts)
     return render_template('accounts.html', accounts=accounts, page=page, per_page=per_page)
 
+
+@app.route('/tests/')
+@app.route('/tests/<page>')
+def get_tests(page=1):
+    page = int(page)
+    per_page = 10
+
+    paginated = db.session.query(Tests).paginate(page=page, per_page=per_page, error_out=False)
+    tests = paginated.items
+    
+    print(tests)
+    return render_template('tests.html', tests=tests, page=page, per_page=per_page)
+
+
+@app.route('/create_test', methods=['GET', 'POST'])
+def create_test():
+    if request.method == 'POST':
+        new_title = request.form.get('title')
+        new_creator = request.form.get('creator')
+        new_row = Accounts(title=new_title, creator_id=new_creator)
+        
+        try:
+            db.session.add(new_row)
+            db.session.commit()
+            return redirect('/')
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {e}"
+    return render_template('create_test.html')
+
+
+@app.route('/edit_test/<int:test_id>', methods=['GET'])
+def update_get_requrest(test_id):
+    try:
+        test = Tests.query.get(test_id)
+    
+        if test is None:
+            return render_template('edit_test.html', error='Test not found!', test=None)
+        return render_template('edit_test.html', test=test)
+    
+    except Exception as e:
+        db.session.rollback()
+        return f"Error: {e}"
 
 if __name__ == '__main__':
     app.run(debug=True)

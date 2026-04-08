@@ -5,15 +5,18 @@
         <h3>Page {{ page }}</h3>
 
         <div class="flex-box">
-            {% for account in accounts %}
-                <div class="account">
+            {% for test in tests %}
+                <div class="test">
                     <ul>
-                        <li>Account id: {{ account.id }}</li>
+                        <li>Tests id: {{ test.test_id }}</li>
                         <ul>
-                            <li>Username: {{ account.username }}</li>
-                            <li>Role: {{ account.role }}</li>
+                            <li>Creator: {{ test.creator_id }}</li>
+                            <li>Title: {{ test.title }}</li>
                         </ul>
                     </ul>
+                    <div class="test-actions">
+                        <a href="/edit_test/{{ test['test_id'] }}" class="test-action-btn">Edit</a>
+                    </div>
                 </div>
             {% endfor %}
 

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block body %}
+    <div class="body">
+        <h1>Create a Test</h1>
+
+        <form action="/create_test" method="POST">
+            <input type="text" name="title" placeholder="Title" class="input_field" required>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+{% endblock %}
