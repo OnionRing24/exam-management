@@ -1,14 +1,15 @@
 {% extends "base.html" %}
 {% block body %}
     <div class="body">
-        <h1>Login</h1>
+        <h1>Create an Account</h1>
 
-        <form action="/register">
-            <input type="first" name="first" placeholder="First Name" class="input_field" required>
-            <input type="last" name="last" placeholder="Last Name" class="input_field" required>
-            <input type="email" name="email" placeholder="Email" class="input_field" required>
-            <input type="password" name="password" placeholder="Password" class="input_field" required>
-            <input type="password" name="confirm_password" placeholder="Confirm Password" class="input_field" required>
+        <form action="/register" method="POST">
+            <select name="role" class="role" required>
+                <option value="" disabled selected>Role</option>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+            </select>
+            <input type="text" name="username" placeholder="Username" class="input_field" required>
             <button type="submit">Register</button>
         </form>
     </div>

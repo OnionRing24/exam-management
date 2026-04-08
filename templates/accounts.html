@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block body %}
+    {% set prev_page = page - 1 %}  <!-- variables in jinja --->
+    <div class="column">
+        <h3>Page {{ page }}</h3>
+
+        <div class="flex-box">
+            {% for account in accounts %}
+                <div class="boat">
+                    <ul>
+                        <li>Account id: {{ account.id }}</li>
+                        <ul>
+                            <li>Username: {{ account.username }}</li>
+                            <li>Role: {{ account.role }}</li>
+                        </ul>
+                    </ul>
+                </div>
+            {% endfor %}
+
+            {% if boats | length < 1 %}
+                <h1>No data available</h1>
+            {% endif %}
+        </div>
+
+        <div class="pagination_bar">
+            <a href= "{{ "/accounts/"+ (page - 1) | string }}" class="pagination_button"> < </a>
+            <a class="pagination_button" style="background-color: black"> {{page}} </a>
+            <a href="{{ "/accounts/"+ (page + 1) | string }}" class="pagination_button" > {{ page + 1 }} </a>
+            <a href="{{ "/accounts/"+ (page + 2) | string }}" class="pagination_button"> {{ page + 2 }} </a>
+            <a href="{{ "/accounts/"+ (page + 1) | string }}" class="pagination_button"> > </a>
+
+        </div>
+    </div>
+
+
+{% endblock %}

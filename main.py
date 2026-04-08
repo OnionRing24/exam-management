@@ -2,22 +2,53 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@cset155/class_exam (your database name)'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:cset155@localhost/class_exam'
 db = SQLAlchemy(app)
+
+
+class Accounts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255), nullable=False, unique=True)
+    role = db.Column(db.String(50), nullable=False)
+
+@app.before_request
+def create_tables():
+    db.create_all()
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/register', methods=['GET'])
-def create_get_request():
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        new_username = request.form.get('username')
+        new_role = request.form.get('role')
+        new_row = Accounts(role=new_role, username=new_username)
+        
+        try:
+            db.session.add(new_row)
+            db.session.commit()
+            return redirect('/')
+        except Exception as e:
+            db.session.rollback()
+            return f"Error: {e}"
     return render_template('register.html')
 
-@app.route('/register', methods=['POST'])
-def create_account():
-    if request.form.get('password') == request.form.get('confirm_password'):
-        if request.form.get('username'):
-            pass
+
+@app.route('/accounts/')
+@app.route('/accounts/<page>')
+def get_accounts(page=1):
+    page = int(page)
+    per_page = 10
+
+    paginated = db.session.query(Accounts).paginate(page=page, per_page=per_page, error_out=False)
+    accounts = paginated.items
+    
+    print(accounts)
+    return render_template('accounts.html', accounts=accounts, page=page, per_page=per_page)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
