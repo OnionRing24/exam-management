@@ -32,7 +32,7 @@ class Responses(db.Model):
     response_id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.question_id'), nullable=False)
-    test_id = db.Column(db.Integer, db.ForeignKey('questions.test_id'), nullable=False)
+    test_id = db.Column(db.Integer, db.ForeignKey('tests.test_id'), nullable=False)
     response_text = db.Column(db.Text, nullable=False)
 
 
@@ -221,7 +221,7 @@ def submit_test(test_id):
         # Create a response for each question
         for question_id, response_text in zip(question_ids, response_texts):
             if question_id.strip():
-                new_response = Responses(question_id=int(question_id),response_text=response_text, student_id=session['user_id'])
+                new_response = Responses(question_id=int(question_id),response_text=response_text, student_id=session['user_id'], test_id=test_id)
                 db.session.add(new_response)
         
         db.session.commit()
