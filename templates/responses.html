@@ -5,23 +5,22 @@
         <h3>Page {{ page }}</h3>
 
         <div class="flex-box">
-            {% for test in tests %}
-                <div class="test">
-                    <ul>
-                        <li>Tests id: {{ test.test_id }}</li>
+            {% if responses %}
+                {% for test in tests %}
+                    <div class="test">
                         <ul>
-                            <li>Creator: {{ test.creator_id }}</li>
-                            <li>Title: {{ test.title }}</li>
+                            <li>Tests id: {{ test.test_id }}</li>
+                            <ul>
+                                <li>Creator: {{ test.creator_id }}</li>
+                                <li>Title: {{ test.title }}</li>
+                            </ul>
                         </ul>
-                    </ul>
-                    <div class="test-actions">
-                        <a href="/take_test/{{ test['test_id'] }}" class="test-action-btn">Take</a>
-                        <a href="/edit_test/{{ test['test_id'] }}" class="test-action-btn">Edit</a>
-                        <a href="/responses/{{ test['test_id'] }} class=test-action-btn">View Responses</a>
+                        <div class="test-actions">
+                            <a href="/take_test/{{ test['test_id'] }}" class="test-action-btn">Take</a>
+                            <a href="/edit_test/{{ test['test_id'] }}" class="test-action-btn">Edit</a>
+                        </div>
                     </div>
-                </div>
-            {% endfor %}
-
+                {% endfor %}
             {% if tests | length < 1 %}
                 <h1>No data available</h1>
             {% endif %}

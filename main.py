@@ -1,9 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:cset155@localhost/class_exam'
 db = SQLAlchemy(app)
+app.secret_key = 'hello'
 
 
 class Accounts(db.Model):
@@ -62,11 +63,22 @@ def login():
         user_exists = Accounts.query.filter_by(username=username).first()
         if user_exists:
             print(user_exists)
+            session.permanent = True
+            session['username'] = username
+            session['user_id'] = user_exists.id
+            session['role'] = user_exists.role
+            print(session['username'])
             return redirect('/')
         else:
             db.session.rollback()
             return f"Error: {Exception}"
     return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect('/login')
 
 
 @app.route('/accounts/')
@@ -100,7 +112,7 @@ def create_test():
     if request.method == 'POST':
         new_title = request.form.get('title')
         new_creator = request.form.get('creator')
-        new_row = Accounts(title=new_title, creator_id=new_creator)
+        new_row = Tests(title=new_title, creator_id=new_creator)
         
         try:
             db.session.add(new_row)
