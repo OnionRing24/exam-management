@@ -1,0 +1,8 @@
+CREATE TABLE responses (
+    response_id INT AUTO_INCREMENT PRIMARY KEY,
+    student_id INT,
+    question_id INT NOT NULL,
+    response_text TEXT NOT NULL,
+    CONSTRAINT fk_student FOREIGN KEY (student_id) REFERENCES accounts(id),
+    CONSTRAINT fk_question FOREIGN KEY (question_id) REFERENCES questions(question_id)
+) ENGINE=InnoDB;
