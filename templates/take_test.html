@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block body %}
+    <div class="body">
+        <h1>{{ test.title }}</h1>
+
+        {% if error %}
+            <div class="error">{{ error }}</div>
+        {% endif %}
+
+        <form action="/take_test/{{ test.test_id }}" method="POST">
+            <!-- Hidden field for student ID -->
+            <input type="hidden" name="student_id" value="{{ session.get('user_id') }}">
+            
+            <h3>Questions:</h3>
+            <div id="input-container">
+                {% if questions %}
+                    {% for question in questions %}
+                        <div class="input-group">
+                            <label>{{ question.question_text }}</label>
+                            <!-- Hidden field to track question ID -->
+                            <input type="hidden" name="question_id" value="{{ question.question_id }}">
+                            <!-- Text area for student response -->
+                            <textarea name="response_text" placeholder="Enter your response" class="input_field" rows="4"></textarea>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No questions in this test.</p>
+                {% endif %}
+            </div>
+            <button type="submit">Submit Test</button>
+        </form>
+    </div>
+{% endblock %}

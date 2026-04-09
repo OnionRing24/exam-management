@@ -1,29 +1,34 @@
-from flask import Flask, render_template, request, redirect, url_for
+import secrets
+from flask import Flask, render_template, request, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:cset155@localhost/class_exam'
 db = SQLAlchemy(app)
 
+app.secret_key = secrets.token_hex(16)
 
 class Accounts(db.Model):
     __tablename__ = 'accounts'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
-    # PW
     role = db.Column(db.String(50), nullable=False)
-
 class Tests(db.Model):
     __tablename__ = 'tests'
     test_id = db.Column(db.Integer, primary_key=True)
-    creator_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
     title = db.Column(db.Text, nullable=False)
-
 class Questions(db.Model):
     __tablename__ = 'questions'
     question_id = db.Column(db.Integer, primary_key=True)
     test_id = db.Column(db.Integer, db.ForeignKey('tests.test_id'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
+class Responses(db.Model):
+    __tablename__ = 'responses'
+    response_id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    question_id = db.Column(db.Integer, db.ForeignKey('questions.question_id'), nullable=False)
+    response_text = db.Column(db.Text, nullable=False)
 
 
 @app.before_request
@@ -57,13 +62,24 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         user_exists = Accounts.query.filter_by(username=username).first()
+        
         if user_exists:
-            print(user_exists)
+            session['user_id'] = user_exists.id
+            session['username'] = user_exists.username
+            session['role'] = user_exists.role
+            
+            print(f"User logged in: {user_exists.username} (ID: {user_exists.id})")
             return redirect('/')
         else:
             db.session.rollback()
-            return f"Error: {Exception}"
+            return render_template('login.html', error="Username not found")
     return render_template('login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
 
 
 @app.route('/accounts/')
@@ -117,7 +133,6 @@ def update_get_request(test_id):
         if test is None:
             return render_template('edit_test.html', error='test not found', test=None, questions=[])
         
-        # Fetch ALL questions for this test
         questions = Questions.query.filter_by(test_id=test_id).all()
 
         return render_template('edit_test.html', test=test, questions=questions, error=None)
@@ -135,20 +150,17 @@ def update_test(test_id):
         if test is None:
             return render_template('edit_test.html', error='test not found', test=None)
         
-        # Update test title
         test.title = request.form['title']
         db.session.commit()
         
-        # Handle new questions
         question_texts = request.form.getlist('question_text')
         for question_text in question_texts:
-            if question_text.strip():  # Only add non-empty questions
+            if question_text.strip():
                 new_question = Questions(test_id=test_id, question_text=question_text)
                 db.session.add(new_question)
         
         db.session.commit()
         
-        # Fetch updated data to re-render
         questions = Questions.query.filter_by(test_id=test_id).all()
         return render_template('edit_test.html', error=None, success="Data updated successfully!", test=test, questions=questions)
     except Exception as e:
@@ -156,6 +168,60 @@ def update_test(test_id):
         print(e)
         return render_template('edit_test.html', error=str(e), success=None, test=test, questions=[])
 
+
+@app.route('/take_test/<int:test_id>', methods=['GET'])
+def participate_get_request(test_id):
+    try:
+        test = Tests.query.filter_by(test_id=test_id).first()
+
+        if test is None:
+            return render_template('take_test.html', error='test not found', test=None, questions=[])
+        
+        questions = Questions.query.filter_by(test_id=test_id).all()
+
+        return render_template('take_test.html', test=test, questions=questions, error=None)
+    except Exception as e:
+        print(e)
+        return render_template('take_test.html', error=str(e), test=None, questions=[])
+
+
+@app.route('/take_test/<int:test_id>', methods=['POST'])
+def submit_test(test_id):
+    try:
+        test = Tests.query.filter_by(test_id=test_id).first()
+        
+        if test is None:
+            return render_template('take_test.html', error='test not found', test=None, questions=[])
+        
+        # Get the student ID from session or request
+        # This assumes you have some way to identify the student
+        student_id = request.form.get('student_id')  # or from session
+        
+        if not student_id:
+            return render_template('take_test.html', error='Student ID not found', test=test, questions=[])
+        
+        # Get all responses from the form
+        response_texts = request.form.getlist('response_text')
+        question_ids = request.form.getlist('question_id')
+        
+        # Create a response for each question
+        for question_id, response_text in zip(question_ids, response_texts):
+            if response_text.strip():  # Only save non-empty responses
+                new_response = Responses(
+                    student_id=int(student_id),
+                    question_id=int(question_id),
+                    response_text=response_text
+                )
+                db.session.add(new_response)
+        
+        db.session.commit()
+        return redirect(url_for('index'))  # Or wherever you want to redirect
+        
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        questions = Questions.query.filter_by(test_id=test_id).all()
+        return render_template('take_test.html', error=str(e), test=test, questions=questions)
 
 
 if __name__ == '__main__':
