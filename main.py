@@ -32,6 +32,7 @@ class Responses(db.Model):
     response_id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.question_id'), nullable=False)
+    test_id = db.Column(db.Integer, db.ForeignKey('questions.test_id'), nullable=False)
     response_text = db.Column(db.Text, nullable=False)
 
 
