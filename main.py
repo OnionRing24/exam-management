@@ -234,5 +234,21 @@ def submit_test(test_id):
         return render_template('take_test.html', error=str(e), test=test, questions=questions)
 
 
+@app.route('/responses/<int:test_id>', methods=['GET', 'POST'])
+def create_response(test_id):
+    results = db.session.query(
+        Responses.student_id,
+        Questions.question_text, 
+        Responses.response_text
+    )\
+    .join(Tests, Responses.test_id == Tests.test_id)\
+    .join(Questions, Tests.test_id == Questions.test_id)\
+    .filter(Tests.test_id == test_id)\
+    .all()
+
+    print(results)
+    return render_template('responses.html', results=results)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
