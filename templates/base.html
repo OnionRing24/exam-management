@@ -13,10 +13,16 @@
                 <li><a href="/accounts">Accounts</a></li>
                 <li><a href="/logout">Log Out</a></li>
             </ul>
-            <ul>
-                <li><a href="/tests">Tests</a></li>
-                <li><a href="/create_test">Create Test</a></li>
-            </ul>
+            {% if session['role']=='teacher' %}
+                <ul>
+                    <li><a href="/tests">Tests</a></li>
+                    <li><a href="/create_test">Create Test</a></li>
+                </ul>
+            {% elif session['role']=='student' %}
+                <ul>
+                    <li><a href="/tests">Tests</a></li>
+                </ul>
+            {% endif %}
         </header>
 
         {% block body %}

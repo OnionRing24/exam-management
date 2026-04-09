@@ -12,22 +12,28 @@ class Accounts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255), nullable=False, unique=True)
     role = db.Column(db.String(50), nullable=False)
+
 class Tests(db.Model):
     __tablename__ = 'tests'
     test_id = db.Column(db.Integer, primary_key=True)
     creator_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
     title = db.Column(db.Text, nullable=False)
+    questions = db.relationship('Questions', backref='test', cascade='all, delete-orphan')
+
 class Questions(db.Model):
     __tablename__ = 'questions'
     question_id = db.Column(db.Integer, primary_key=True)
     test_id = db.Column(db.Integer, db.ForeignKey('tests.test_id'), nullable=False)
     question_text = db.Column(db.Text, nullable=False)
+    responses = db.relationship('Responses', backref='question', cascade='all, delete-orphan')
+
 class Responses(db.Model):
     __tablename__ = 'responses'
     response_id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.question_id'), nullable=False)
     response_text = db.Column(db.Text, nullable=False)
+
 
 
 @app.before_request
@@ -111,8 +117,7 @@ def get_tests(page=1):
 def create_test():
     if request.method == 'POST':
         new_title = request.form.get('title')
-        new_creator = request.form.get('creator')
-        new_row = Tests(title=new_title, creator_id=new_creator)
+        new_row = Tests(title=new_title, creator_id=session['user_id'])
         
         try:
             db.session.add(new_row)
@@ -122,6 +127,22 @@ def create_test():
             db.session.rollback()
             return f"Error: {e}"
     return render_template('create_test.html')
+
+
+@app.route('/delete_test/<int:test_id>', methods=['POST'])
+def delete_test(test_id):
+    test = Tests.query.get(test_id)
+    
+    if not test:
+        return "Test not found", 404
+    
+    # Verify ownership
+    if test.creator_id != session['user_id']:
+        return "You can only delete tests you created", 403
+    
+    db.session.delete(test)
+    db.session.commit()
+    return redirect('/')
 
 
 @app.route('/edit_test/<int:test_id>', methods=['GET'])
@@ -199,7 +220,7 @@ def submit_test(test_id):
         # Create a response for each question
         for question_id, response_text in zip(question_ids, response_texts):
             if question_id.strip():
-                new_response = Responses(question_id=int(question_id),response_text=response_text)
+                new_response = Responses(question_id=int(question_id),response_text=response_text, student_id=session['user_id'])
                 db.session.add(new_response)
         
         db.session.commit()
