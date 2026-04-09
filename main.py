@@ -1,12 +1,10 @@
-import secrets
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:cset155@localhost/class_exam'
 db = SQLAlchemy(app)
 
-app.secret_key = secrets.token_hex(16)
 
 class Accounts(db.Model):
     __tablename__ = 'accounts'
@@ -26,7 +24,7 @@ class Questions(db.Model):
 class Responses(db.Model):
     __tablename__ = 'responses'
     response_id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.question_id'), nullable=False)
     response_text = db.Column(db.Text, nullable=False)
 
@@ -62,24 +60,13 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         user_exists = Accounts.query.filter_by(username=username).first()
-        
         if user_exists:
-            session['user_id'] = user_exists.id
-            session['username'] = user_exists.username
-            session['role'] = user_exists.role
-            
-            print(f"User logged in: {user_exists.username} (ID: {user_exists.id})")
+            print(user_exists)
             return redirect('/')
         else:
             db.session.rollback()
-            return render_template('login.html', error="Username not found")
+            return f"Error: {Exception}"
     return render_template('login.html')
-
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    return redirect(url_for('login'))
 
 
 @app.route('/accounts/')
@@ -193,25 +180,14 @@ def submit_test(test_id):
         if test is None:
             return render_template('take_test.html', error='test not found', test=None, questions=[])
         
-        # Get the student ID from session or request
-        # This assumes you have some way to identify the student
-        student_id = request.form.get('student_id')  # or from session
-        
-        if not student_id:
-            return render_template('take_test.html', error='Student ID not found', test=test, questions=[])
-        
         # Get all responses from the form
         response_texts = request.form.getlist('response_text')
         question_ids = request.form.getlist('question_id')
         
         # Create a response for each question
         for question_id, response_text in zip(question_ids, response_texts):
-            if response_text.strip():  # Only save non-empty responses
-                new_response = Responses(
-                    student_id=int(student_id),
-                    question_id=int(question_id),
-                    response_text=response_text
-                )
+            if question_id.strip():
+                new_response = Responses(question_id=int(question_id),response_text=response_text)
                 db.session.add(new_response)
         
         db.session.commit()

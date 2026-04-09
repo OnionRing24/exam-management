@@ -8,8 +8,6 @@
         {% endif %}
 
         <form action="/take_test/{{ test.test_id }}" method="POST">
-            <!-- Hidden field for student ID -->
-            <input type="hidden" name="student_id" value="{{ session.get('user_id') }}">
             
             <h3>Questions:</h3>
             <div id="input-container">
