@@ -1,6 +1,18 @@
 {% extends "base.html" %}
 {% block body %}
     <div class="column">
-        <div class="flex-box"></div>
+        {% for item in response %}
+            <div class="flex-box">
+                <ul>
+                    <li>
+                        Student ID: {{ item.student_id }}
+                        <ul>
+                            <li>Question: {{ item.question_text }}</li>
+                            <li>Response: {{ item.response_text }}</li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        {% endfor %}
     </div>
 {% endblock %}
