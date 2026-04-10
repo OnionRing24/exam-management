@@ -12,6 +12,7 @@
                 <div class="flex-box">
                     <div class="test-header">
                         <h2>{{ test.title }}</h2>
+                        <h3>Teacher: {{ test.creator_id }}</h3>
                         <p class="average-grade">
                             {% if test.average_grade %}
                                 Average Grade: <strong>{{ test.average_grade }} / 4</strong>

@@ -294,15 +294,14 @@ def my_tests():
         return redirect(url_for('login'))
     
     try:
-        # Get all tests the user has responded to
-        tests_taken = db.session.query(Tests.test_id, Tests.title).distinct()\
+        tests_taken = db.session.query(Tests.test_id, Tests.title, Tests.creator_id).distinct()\
             .join(Responses, Tests.test_id == Responses.test_id)\
             .filter(Responses.student_id == user_id)\
             .all()
         
         tests_data = []
         
-        for test_id, title in tests_taken:
+        for test_id, title, creator_id in tests_taken:
             # Get all questions and responses for this test
             results = db.session.query(
                 Questions.question_text,
@@ -329,6 +328,7 @@ def my_tests():
             tests_data.append({
                 'test_id': test_id,
                 'title': title,
+                'creator_id': creator_id, # 3. ADDED: Add to dictionary
                 'questions_responses': questions_responses,
                 'average_grade': average_grade
             })
@@ -337,6 +337,7 @@ def my_tests():
     except Exception as e:
         print(e)
         return render_template('my_tests.html', tests=[], error='Error loading tests')
+
 
 
 if __name__ == '__main__':
