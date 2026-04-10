@@ -287,8 +287,9 @@ def grade_responses(test_id):
 
 
 @app.route('/my_tests', methods=['GET'])
-def my_tests():
-    user_id = session.get('user_id')
+@app.route('/my_tests/<int:manual_id>', methods=['GET']) # Allow an optional ID in the URL
+def my_tests(manual_id=None):
+    user_id = manual_id or session.get('user_id')
     
     if not user_id:
         return redirect(url_for('login'))
@@ -302,7 +303,6 @@ def my_tests():
         tests_data = []
         
         for test_id, title, creator_id in tests_taken:
-            # Get all questions and responses for this test
             results = db.session.query(
                 Questions.question_text,
                 Responses.response_text,
@@ -321,21 +321,20 @@ def my_tests():
                 for row in results
             ]
             
-            # Calculate average grade
-            grades = [q['grade'] for q in questions_responses if q['grade']]
+            grades = [q['grade'] for q in questions_responses if q['grade'] is not None]
             average_grade = round(sum(grades) / len(grades), 2) if grades else None
             
             tests_data.append({
                 'test_id': test_id,
                 'title': title,
-                'creator_id': creator_id, # 3. ADDED: Add to dictionary
+                'creator_id': creator_id,
                 'questions_responses': questions_responses,
                 'average_grade': average_grade
             })
         
         return render_template('my_tests.html', tests=tests_data)
     except Exception as e:
-        print(e)
+        print(f"Error: {e}")
         return render_template('my_tests.html', tests=[], error='Error loading tests')
 
 

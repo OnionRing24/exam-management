@@ -14,6 +14,11 @@
                             <li>Role: {{ account.role }}</li>
                         </ul>
                     </ul>
+                    <div class="test-actions">
+                        {% if account.role=='student' %}
+                            <a href="{{ url_for('my_tests', manual_id=account.id) }}">View Submissions</a>
+                        {% endif %}
+                    </div>
                 </div>
             {% endfor %}
 
