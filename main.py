@@ -138,7 +138,6 @@ def delete_test(test_id):
     if not test:
         return "Test not found", 404
     
-    # Verify ownership
     if test.creator_id != session['user_id']:
         return "You can only delete tests you created", 403
     
@@ -215,18 +214,16 @@ def submit_test(test_id):
         if test is None:
             return render_template('take_test.html', error='test not found', test=None, questions=[])
         
-        # Get all responses from the form
         response_texts = request.form.getlist('response_text')
         question_ids = request.form.getlist('question_id')
         
-        # Create a response for each question
         for question_id, response_text in zip(question_ids, response_texts):
             if question_id.strip():
                 new_response = Responses(question_id=int(question_id),response_text=response_text, student_id=session['user_id'], test_id=test_id)
                 db.session.add(new_response)
         
         db.session.commit()
-        return redirect(url_for('index'))  # Or wherever you want to redirect
+        return redirect(url_for('index'))
         
     except Exception as e:
         db.session.rollback()
@@ -273,7 +270,7 @@ def grade_responses(test_id):
         response_ids = request.form.getlist('response_id')
         
         for response_id, grade in zip(response_ids, grades):
-            if grade:  # Only update if grade is provided
+            if grade:
                 response_obj = Responses.query.get(response_id)
                 if response_obj:
                     response_obj.grade = int(grade)
@@ -287,7 +284,7 @@ def grade_responses(test_id):
 
 
 @app.route('/my_tests', methods=['GET'])
-@app.route('/my_tests/<int:manual_id>', methods=['GET']) # Allow an optional ID in the URL
+@app.route('/my_tests/<int:manual_id>', methods=['GET'])
 def my_tests(manual_id=None):
     user_id = manual_id or session.get('user_id')
     

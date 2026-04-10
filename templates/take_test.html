@@ -15,9 +15,7 @@
                     {% for question in questions %}
                         <div class="input-group">
                             <label>{{ question.question_text }}</label>
-                            <!-- Hidden field to track question ID -->
                             <input type="hidden" name="question_id" value="{{ question.question_id }}">
-                            <!-- Text area for student response -->
                             <textarea name="response_text" placeholder="Enter your response" class="input_field" rows="4"></textarea>
                         </div>
                     {% endfor %}
