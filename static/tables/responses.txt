@@ -1,9 +1,10 @@
 CREATE TABLE responses (
     response_id INT AUTO_INCREMENT PRIMARY KEY,
-    student_id INT,
+    student_id INT NOT NULL,
     question_id INT NOT NULL,
     test_id INT NOT NULL,
     response_text TEXT NOT NULL,
+    grade INT,
     CONSTRAINT fk_student FOREIGN KEY (student_id) REFERENCES accounts(id) ON DELETE CASCADE,
     CONSTRAINT fk_question FOREIGN KEY (question_id) REFERENCES questions(question_id) ON DELETE CASCADE,
     CONSTRAINT fk_test FOREIGN KEY (test_id) REFERENCES questions(test_id) ON DELETE CASCADE

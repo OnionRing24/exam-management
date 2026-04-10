@@ -16,7 +16,7 @@ class Accounts(db.Model):
 class Tests(db.Model):
     __tablename__ = 'tests'
     test_id = db.Column(db.Integer, primary_key=True)
-    creator_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    creator_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
     title = db.Column(db.Text, nullable=False)
     questions = db.relationship('Questions', backref='test', cascade='all, delete-orphan')
 
@@ -30,10 +30,11 @@ class Questions(db.Model):
 class Responses(db.Model):
     __tablename__ = 'responses'
     response_id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('accounts.id'), nullable=False)
     question_id = db.Column(db.Integer, db.ForeignKey('questions.question_id'), nullable=False)
     test_id = db.Column(db.Integer, db.ForeignKey('tests.test_id'), nullable=False)
     response_text = db.Column(db.Text, nullable=False)
+    grade = db.Column(db.Integer, nullable=True)
 
 
 
@@ -235,28 +236,54 @@ def submit_test(test_id):
 
 
 @app.route('/responses/<int:test_id>', methods=['GET'])
-def create_response(test_id):
+def view_responses(test_id):
     results = db.session.query(
+        Responses.response_id,
         Responses.student_id,
         Questions.question_text, 
-        Responses.response_text
+        Responses.response_text,
+        Responses.grade
     )\
     .join(Questions, Responses.question_id == Questions.question_id)\
     .filter(Responses.test_id == test_id)\
     .distinct()\
     .all()
     
-    # Group by student_id
     from collections import defaultdict
     response_by_student = defaultdict(list)
     
     for row in results:
-        response_by_student[row[0]].append({
-            'question_text': row[1],
-            'response_text': row[2]
+        response_by_student[row[1]].append({
+            'response_id': row[0],
+            'question_text': row[2],
+            'response_text': row[3],
+            'grade': row[4]
         })
     
-    return render_template('responses.html', response=response_by_student)
+    success = request.args.get('success')
+    error = request.args.get('error')
+    
+    return render_template('responses.html', response=response_by_student, success=success, error=error, test_id=test_id)
+
+
+@app.route('/responses/<int:test_id>', methods=['POST'])
+def grade_responses(test_id):
+    try:
+        grades = request.form.getlist('response_grade')
+        response_ids = request.form.getlist('response_id')
+        
+        for response_id, grade in zip(response_ids, grades):
+            if grade:  # Only update if grade is provided
+                response_obj = Responses.query.get(response_id)
+                if response_obj:
+                    response_obj.grade = int(grade)
+        
+        db.session.commit()
+        return redirect(url_for('view_responses', test_id=test_id, success='Grades saved successfully!'))
+    except Exception as e:
+        db.session.rollback()
+        print(e)
+        return redirect(url_for('view_responses', test_id=test_id, error=f'Error saving grades: {str(e)}'))
 
 
 if __name__ == '__main__':

@@ -1,23 +1,43 @@
 {% extends "base.html" %}
 {% block body %}
-    <div class="column">
-        {% for student_id, items in response.items() %}
-            <div class="flex-box">
-                <ul>
-                    <li>
-                        Student ID: {{ student_id }}
-                        {% for item in items %}
-                            <br>
-                            <ul>
-                                <li>Question: {{ item.question_text }}</li>
-                                <ul>
-                                    <li>Response: {{ item.response_text }}</li>
-                                </ul>
-                            </ul>
-                        {% endfor %}
-                    </li>
-                </ul>
+    <div class="body">
+        {% if error %}
+            <h2 class="error">{{ error }}</h2>
+        {% endif %}
+
+        {% if success %}
+            <h2 class="success">{{ success }}</h2>
+        {% endif %}
+        
+        <form method="POST" action="{{ url_for('grade_responses', test_id=test_id) }}">
+            <div class="column">
+                {% for student_id, items in response.items() %}
+                    <div class="flex-box">
+                        <ul>
+                            <li>
+                                <strong>Student ID: {{ student_id }}</strong>
+                                {% for item in items %}
+                                    <br>
+                                    <ul>
+                                        <li><strong>Question:</strong> {{ item.question_text }}</li>
+                                        <ul>
+                                            <li><strong>Response:</strong> {{ item.response_text }}</li>
+                                        </ul>
+                                        {% if session['role']=='teacher' %}
+                                            <div class="response_actions">
+                                                <input type="hidden" name="response_id" value="{{ item.response_id }}">
+                                                <input type="number" name="response_grade" placeholder="Grade" min="0" max="4" value="{{ item.grade or '' }}" class="input_field">
+                                            </div>
+                                        {% endif %}
+                                    </ul>
+                                {% endfor %}
+                            </li>
+                        </ul>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+
+            <button type="submit">Confirm Grade</button>
+        </form>
     </div>
 {% endblock %}
