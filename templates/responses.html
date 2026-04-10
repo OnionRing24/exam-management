@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% block body %}
     <div class="column">
-        {% for item in response %}
+        {% for student_id, items in response.items() %}
             <div class="flex-box">
                 <ul>
                     <li>
-                        Student ID: {{ item.student_id }}
-                        <ul>
-                            <li>Question: {{ item.question_text }}</li>
-                            <li>Response: {{ item.response_text }}</li>
-                        </ul>
+                        Student ID: {{ student_id }}
+                        {% for item in items %}
+                            <br>
+                            <ul>
+                                <li>Question: {{ item.question_text }}</li>
+                                <ul>
+                                    <li>Response: {{ item.response_text }}</li>
+                                </ul>
+                            </ul>
+                        {% endfor %}
                     </li>
                 </ul>
             </div>

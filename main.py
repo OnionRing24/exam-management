@@ -246,16 +246,17 @@ def create_response(test_id):
     .distinct()\
     .all()
     
-    response = [
-        {
-            'student_id': row[0],
+    # Group by student_id
+    from collections import defaultdict
+    response_by_student = defaultdict(list)
+    
+    for row in results:
+        response_by_student[row[0]].append({
             'question_text': row[1],
             'response_text': row[2]
-        }
-        for row in results
-    ]
+        })
     
-    return render_template('responses.html', response=response)
+    return render_template('responses.html', response=response_by_student)
 
 
 if __name__ == '__main__':
