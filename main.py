@@ -286,5 +286,58 @@ def grade_responses(test_id):
         return redirect(url_for('view_responses', test_id=test_id, error=f'Error saving grades: {str(e)}'))
 
 
+@app.route('/my_tests', methods=['GET'])
+def my_tests():
+    user_id = session.get('user_id')
+    
+    if not user_id:
+        return redirect(url_for('login'))
+    
+    try:
+        # Get all tests the user has responded to
+        tests_taken = db.session.query(Tests.test_id, Tests.title).distinct()\
+            .join(Responses, Tests.test_id == Responses.test_id)\
+            .filter(Responses.student_id == user_id)\
+            .all()
+        
+        tests_data = []
+        
+        for test_id, title in tests_taken:
+            # Get all questions and responses for this test
+            results = db.session.query(
+                Questions.question_text,
+                Responses.response_text,
+                Responses.grade
+            )\
+            .join(Responses, Questions.question_id == Responses.question_id)\
+            .filter(Responses.test_id == test_id, Responses.student_id == user_id)\
+            .all()
+            
+            questions_responses = [
+                {
+                    'question_text': row[0],
+                    'response_text': row[1],
+                    'grade': row[2]
+                }
+                for row in results
+            ]
+            
+            # Calculate average grade
+            grades = [q['grade'] for q in questions_responses if q['grade']]
+            average_grade = round(sum(grades) / len(grades), 2) if grades else None
+            
+            tests_data.append({
+                'test_id': test_id,
+                'title': title,
+                'questions_responses': questions_responses,
+                'average_grade': average_grade
+            })
+        
+        return render_template('my_tests.html', tests=tests_data)
+    except Exception as e:
+        print(e)
+        return render_template('my_tests.html', tests=[], error='Error loading tests')
+
+
 if __name__ == '__main__':
     app.run(debug=True)

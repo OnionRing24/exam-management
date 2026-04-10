@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block body %}
+    <div class="body">
+        <h1>My Tests</h1>
+        
+        {% if error %}
+            <h2 class="error">{{ error }}</h2>
+        {% endif %}
+
+        {% if tests %}
+            {% for test in tests %}
+                <div class="flex-box">
+                    <div class="test-header">
+                        <h2>{{ test.title }}</h2>
+                        <p class="average-grade">
+                            {% if test.average_grade %}
+                                Average Grade: <strong>{{ test.average_grade }} / 4</strong>
+                            {% else %}
+                                <em>Not graded yet</em>
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="questions-responses">
+                        {% for item in test.questions_responses %}
+                            <ul>
+                                <li>Question</li>
+                                <ul>
+                                    <li class="question-text">{{ item.question_text }}</li>
+                                </ul>
+                                
+                                <li>Your Response</li>
+                                <ul>
+                                    <li class="response-text">{{ item.response_text }}</li>
+                                </ul>
+                                
+                                <li class="grade">Grade: 
+                                    {% if item.grade %}
+                                        <strong>{{ item.grade }} / 4</strong>
+                                    {% else %}
+                                        <em>Not graded yet</em>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>You haven't taken any tests yet.</p>
+        {% endif %}
+    </div>
+{% endblock %}
