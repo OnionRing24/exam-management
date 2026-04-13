@@ -6,6 +6,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:cset155@localhost/class_ex
 db = SQLAlchemy(app)
 app.secret_key = 'hello'
 
+with app.app_context():
+    db.create_all()
 
 class Accounts(db.Model):
     __tablename__ = 'accounts'
